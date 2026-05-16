@@ -1,8 +1,23 @@
 import 'package:bon_appetit/src/core/config/app_config.dart';
+import 'package:bon_appetit/src/features/server_status/data/server_status_repository.dart';
 import 'package:flutter/material.dart';
 
-class ServerStatusCard extends StatelessWidget {
+class ServerStatusCard extends StatefulWidget {
   const ServerStatusCard({super.key});
+
+  @override
+  State<ServerStatusCard> createState() => _ServerStatusCardState();
+}
+
+class _ServerStatusCardState extends State<ServerStatusCard> {
+  final _repository = ServerStatusRepository();
+  late Future<ServerStatus> _futureStatus;
+
+  @override
+  void initState() {
+    super.initState();
+    _futureStatus = _repository.fetchStatus();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,24 +49,32 @@ class ServerStatusCard extends StatelessWidget {
                 ],
               ),
             ),
-            const SpacerStatus(),
-            FilledButton.tonalIcon(
-              onPressed: () {},
-              icon: const Icon(Icons.sync_outlined),
-              label: const Text('Ready'),
+            FutureBuilder<ServerStatus>(
+              future: _futureStatus,
+              builder: (context, snapshot) {
+                final isReady = snapshot.data?.status == 'ok';
+                final label = snapshot.connectionState == ConnectionState.done
+                    ? isReady
+                        ? 'Ready'
+                        : 'Offline'
+                    : 'Checking';
+
+                return FilledButton.tonalIcon(
+                  onPressed: () {
+                    setState(() {
+                      _futureStatus = _repository.fetchStatus();
+                    });
+                  },
+                  icon: Icon(
+                    isReady ? Icons.check_circle_outline : Icons.sync_outlined,
+                  ),
+                  label: Text(label),
+                );
+              },
             ),
           ],
         ),
       ),
     );
-  }
-}
-
-class SpacerStatus extends StatelessWidget {
-  const SpacerStatus({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(width: 8);
   }
 }

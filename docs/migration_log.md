@@ -51,3 +51,23 @@ restaurant, bakery, order, and delivery product instead of a static shell.
   product decision.
 - Kept runtime API host configurable through `API_BASE_URL`.
 - Updated widget test expectations after adding the hero brand title.
+
+## 2026-05-15 - Functional App Pass
+
+Added the first usable application layer after emulator testing exposed the
+dashboard as too static.
+
+### Added
+
+- Demo login screen.
+- Bottom navigation shell for Home, Menu, Orders, and Track sections.
+- Baker API client using `API_BASE_URL`.
+- Restaurant, order, and server status repositories.
+- Restaurant and order screens backed by Docker API endpoints.
+- Tracker screen with a delivery timeline.
+- Android Internet permission for emulator API calls.
+
+### Fixed
+
+- Mobile hero overflow on `sdk gphone64 x86 64`.
+- Static dashboard preview sections now refresh from `baker-server`.

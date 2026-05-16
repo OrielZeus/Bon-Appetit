@@ -5,14 +5,18 @@ import 'package:bon_appetit/src/features/dashboard/models/feature_module.dart';
 import 'package:bon_appetit/src/features/dashboard/widgets/catalog_item_card.dart';
 import 'package:bon_appetit/src/features/dashboard/widgets/hero_panel.dart';
 import 'package:bon_appetit/src/features/dashboard/widgets/module_card.dart';
+import 'package:bon_appetit/src/features/orders/data/orders_repository.dart';
 import 'package:bon_appetit/src/features/orders/domain/order_preview.dart';
+import 'package:bon_appetit/src/features/restaurants/data/restaurant_repository.dart';
 import 'package:bon_appetit/src/features/restaurants/domain/restaurant.dart';
 import 'package:bon_appetit/src/features/server_status/server_status_card.dart';
 import 'package:bon_appetit/src/features/tracker/domain/tracker_event.dart';
 import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+  const DashboardScreen({super.key, required this.onOpenSection});
+
+  final ValueChanged<int> onOpenSection;
 
   static const _modules = <FeatureModule>[
     FeatureModule(
@@ -38,21 +42,6 @@ class DashboardScreen extends StatelessWidget {
       description: 'Unification notes, review checklist and release evidence.',
       icon: Icons.article_outlined,
       status: 'README seeded',
-    ),
-  ];
-
-  static const _restaurants = <Restaurant>[
-    Restaurant(
-      name: 'Bon Bakery',
-      category: 'Bakery and desserts',
-      rating: 4.8,
-      deliveryMinutes: 25,
-    ),
-    Restaurant(
-      name: 'Meal Monkey Legacy',
-      category: 'Food delivery reference',
-      rating: 4.6,
-      deliveryMinutes: 32,
     ),
   ];
 
@@ -84,21 +73,6 @@ class DashboardScreen extends StatelessWidget {
       price: 6.80,
       assetPath: AppAssets.dessertOne,
       badge: 'Legacy',
-    ),
-  ];
-
-  static const _orders = <OrderPreview>[
-    OrderPreview(
-      code: 'BA-0001',
-      customer: 'Internal QA',
-      total: 42.50,
-      status: 'Draft',
-    ),
-    OrderPreview(
-      code: 'BA-0002',
-      customer: 'Kitchen test',
-      total: 18.90,
-      status: 'Queued',
     ),
   ];
 
@@ -137,7 +111,10 @@ class DashboardScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            const HeroPanel(),
+            HeroPanel(
+              onExploreMenu: () => onOpenSection(1),
+              onTrackOrder: () => onOpenSection(3),
+            ),
             const SizedBox(height: 16),
             const ServerStatusCard(),
             const SizedBox(height: 16),
@@ -155,7 +132,10 @@ class DashboardScreen extends StatelessWidget {
                     mainAxisExtent: columns == 4 ? 220 : 240,
                   ),
                   itemBuilder: (context, index) {
-                    return ModuleCard(module: _modules[index]);
+                    return ModuleCard(
+                      module: _modules[index],
+                      onTap: () => onOpenSection(index == 0 ? 1 : index),
+                    );
                   },
                 );
               },
@@ -180,46 +160,25 @@ class DashboardScreen extends StatelessWidget {
             const SizedBox(height: 12),
             _Section(
               title: 'Restaurant Seeds',
-              child: Column(
-                children: _restaurants
-                    .map(
-                      (restaurant) => ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.asset(
-                            _restaurantAsset(restaurant.name),
-                            width: 54,
-                            height: 54,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        title: Text(restaurant.name),
-                        subtitle: Text(restaurant.category),
-                        trailing: Text(
-                          '${restaurant.rating} | ${restaurant.deliveryMinutes}m',
-                        ),
-                      ),
-                    )
-                    .toList(),
+              action: TextButton.icon(
+                onPressed: () => onOpenSection(1),
+                icon: const Icon(Icons.open_in_new_outlined),
+                label: const Text('Open'),
+              ),
+              child: _RestaurantPreview(
+                repository: RestaurantRepository(),
+                assetResolver: _restaurantAsset,
               ),
             ),
             const SizedBox(height: 12),
             _Section(
               title: 'Order Seeds',
-              child: Column(
-                children: _orders
-                    .map(
-                      (order) => ListTile(
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.shopping_bag_outlined),
-                        title: Text(order.code),
-                        subtitle: Text(order.customer),
-                        trailing: Text('\$${order.total.toStringAsFixed(2)}'),
-                      ),
-                    )
-                    .toList(),
+              action: TextButton.icon(
+                onPressed: () => onOpenSection(2),
+                icon: const Icon(Icons.open_in_new_outlined),
+                label: const Text('Open'),
               ),
+              child: _OrderPreviewList(repository: OrdersRepository()),
             ),
             const SizedBox(height: 12),
             _Section(
@@ -270,10 +229,11 @@ class DashboardScreen extends StatelessWidget {
 }
 
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.child});
+  const _Section({required this.title, required this.child, this.action});
 
   final String title;
   final Widget child;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
@@ -283,12 +243,144 @@ class _Section extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleLarge),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+                if (action != null) action!,
+              ],
+            ),
             const SizedBox(height: 8),
             child,
           ],
         ),
       ),
+    );
+  }
+}
+
+class _RestaurantPreview extends StatelessWidget {
+  const _RestaurantPreview({
+    required this.repository,
+    required this.assetResolver,
+  });
+
+  final RestaurantRepository repository;
+  final String Function(String name) assetResolver;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Restaurant>>(
+      future: repository.fetchRestaurants(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const _LoadingRows(label: 'Loading restaurants...');
+        }
+
+        if (snapshot.hasError) {
+          return _ErrorText(message: snapshot.error.toString());
+        }
+
+        final restaurants = snapshot.data ?? const <Restaurant>[];
+        return Column(
+          children: restaurants.take(3).map((restaurant) {
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  assetResolver(restaurant.name),
+                  width: 54,
+                  height: 54,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              title: Text(restaurant.name),
+              subtitle: Text(restaurant.category),
+              trailing: Text(
+                '${restaurant.rating} | ${restaurant.deliveryMinutes}m',
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+}
+
+class _OrderPreviewList extends StatelessWidget {
+  const _OrderPreviewList({required this.repository});
+
+  final OrdersRepository repository;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<OrderPreview>>(
+      future: repository.fetchOrders(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const _LoadingRows(label: 'Loading orders...');
+        }
+
+        if (snapshot.hasError) {
+          return _ErrorText(message: snapshot.error.toString());
+        }
+
+        final orders = snapshot.data ?? const <OrderPreview>[];
+        return Column(
+          children: orders.take(3).map((order) {
+            return ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.shopping_bag_outlined),
+              title: Text(order.code),
+              subtitle: Text('${order.customer} | ${order.status}'),
+              trailing: Text('\$${order.total.toStringAsFixed(2)}'),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+}
+
+class _LoadingRows extends StatelessWidget {
+  const _LoadingRows({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
+        children: [
+          const SizedBox.square(
+            dimension: 18,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+          const SizedBox(width: 12),
+          Text(label),
+        ],
+      ),
+    );
+  }
+}
+
+class _ErrorText extends StatelessWidget {
+  const _ErrorText({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Text(
+      message,
+      style: TextStyle(color: colors.error),
     );
   }
 }

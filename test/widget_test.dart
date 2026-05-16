@@ -6,8 +6,13 @@ void main() {
     await tester.pumpWidget(const BonAppetitApp());
 
     expect(find.text('Bon Appetit'), findsWidgets);
-    expect(find.text('Restaurants'), findsOneWidget);
-    expect(find.text('Orders'), findsOneWidget);
-    expect(find.text('Delivery tracker'), findsOneWidget);
+    expect(find.text('Sign in'), findsOneWidget);
+
+    await tester.tap(find.text('Enter workspace'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Explore menu'), findsOneWidget);
+    expect(find.text('Track order'), findsOneWidget);
+    expect(find.text('Home'), findsOneWidget);
   });
 }
