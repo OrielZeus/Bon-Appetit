@@ -1,0 +1,10 @@
+name: baker_server
+description: Local Bon Appetit API used by the Flutter app during development.
+publish_to: none
+
+environment:
+  sdk: ^3.5.3
+
+dependencies:
+  shelf: ^1.4.1
+  shelf_router: ^1.1.4

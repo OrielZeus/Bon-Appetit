@@ -1,0 +1,36 @@
+services:
+  baker-server:
+    build:
+      context: ./server
+    container_name: baker-server
+    depends_on:
+      baker-postgres:
+        condition: service_healthy
+    environment:
+      API_HOST: 0.0.0.0
+      API_PORT: 8080
+      DATABASE_URL: postgres://bon_appetit:bon_appetit@baker-postgres:5432/bon_appetit
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  baker-postgres:
+    image: postgres:16-alpine
+    container_name: baker-postgres
+    environment:
+      POSTGRES_DB: bon_appetit
+      POSTGRES_USER: bon_appetit
+      POSTGRES_PASSWORD: bon_appetit
+    ports:
+      - "54329:5432"
+    volumes:
+      - baker_postgres_data:/var/lib/postgresql/data
+      - ./server/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bon_appetit -d bon_appetit"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  baker_postgres_data:
