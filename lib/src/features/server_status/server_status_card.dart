@@ -11,11 +11,14 @@ class ServerStatusCard extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          crossAxisAlignment: WrapCrossAlignment.center,
           children: [
             Icon(Icons.dns_outlined, color: colors.secondary),
-            const SizedBox(width: 12),
-            Expanded(
+            SizedBox(
+              width: 270,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -31,6 +34,7 @@ class ServerStatusCard extends StatelessWidget {
                 ],
               ),
             ),
+            const SpacerStatus(),
             FilledButton.tonalIcon(
               onPressed: () {},
               icon: const Icon(Icons.sync_outlined),
@@ -40,5 +44,14 @@ class ServerStatusCard extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class SpacerStatus extends StatelessWidget {
+  const SpacerStatus({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox(width: 8);
   }
 }

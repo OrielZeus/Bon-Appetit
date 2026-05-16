@@ -32,3 +32,22 @@ Created `Bon Appetit` in `C:\Projects` as the new unified Flutter workspace.
   handling and no retry/fallback strategy.
 - Several legacy screens are UI-first and need domain/data separation before
   production use.
+
+## 2026-05-15 - Visual Dashboard Expansion
+
+Expanded the initial dashboard so the app starts to feel like the combined
+restaurant, bakery, order, and delivery product instead of a static shell.
+
+### Added
+
+- Hero panel using legacy food imagery.
+- Featured menu examples using product assets from `food_delivery_app`.
+- Restaurant seed rows using images from `food_delivery_meal`.
+- Shared asset path constants in `lib/src/core/assets`.
+
+### Guardrails
+
+- Kept image usage under `assets/legacy/...` until each asset receives a final
+  product decision.
+- Kept runtime API host configurable through `API_BASE_URL`.
+- Updated widget test expectations after adding the hero brand title.

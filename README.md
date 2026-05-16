@@ -153,6 +153,7 @@ integrity, non-breaking legacy improvements, and closure-ready ticket evidence.
 
 - Flutter app shell created.
 - Legacy assets copied with traceable folders.
+- Visual dashboard expanded with real legacy product and restaurant imagery.
 - Local Docker compose seeded.
 - Dart API server scaffolded.
 - README and migration log seeded.

@@ -1,5 +1,9 @@
+import 'package:bon_appetit/src/core/assets/app_assets.dart';
 import 'package:bon_appetit/src/core/config/app_config.dart';
+import 'package:bon_appetit/src/features/catalog/models/catalog_item.dart';
 import 'package:bon_appetit/src/features/dashboard/models/feature_module.dart';
+import 'package:bon_appetit/src/features/dashboard/widgets/catalog_item_card.dart';
+import 'package:bon_appetit/src/features/dashboard/widgets/hero_panel.dart';
 import 'package:bon_appetit/src/features/dashboard/widgets/module_card.dart';
 import 'package:bon_appetit/src/features/orders/domain/order_preview.dart';
 import 'package:bon_appetit/src/features/restaurants/domain/restaurant.dart';
@@ -49,6 +53,37 @@ class DashboardScreen extends StatelessWidget {
       category: 'Food delivery reference',
       rating: 4.6,
       deliveryMinutes: 32,
+    ),
+  ];
+
+  static const _catalogItems = <CatalogItem>[
+    CatalogItem(
+      name: 'Stone Oven Pizza',
+      category: 'Restaurant special',
+      price: 12.90,
+      assetPath: AppAssets.pizza,
+      badge: 'Hot',
+    ),
+    CatalogItem(
+      name: 'Beef Burger',
+      category: 'Delivery favorite',
+      price: 9.50,
+      assetPath: AppAssets.burger,
+      badge: 'Top',
+    ),
+    CatalogItem(
+      name: 'Cup Cake Box',
+      category: 'Bakery',
+      price: 7.20,
+      assetPath: AppAssets.cupcake,
+      badge: 'Sweet',
+    ),
+    CatalogItem(
+      name: 'Dessert Plate',
+      category: 'Meal Monkey import',
+      price: 6.80,
+      assetPath: AppAssets.dessertOne,
+      badge: 'Legacy',
     ),
   ];
 
@@ -102,15 +137,7 @@ class DashboardScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
-            Text(
-              'Unified restaurant, bakery and delivery workspace',
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'A clean Flutter shell for consolidating the old delivery projects while keeping the local Docker API separate and traceable.',
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
+            const HeroPanel(),
             const SizedBox(height: 16),
             const ServerStatusCard(),
             const SizedBox(height: 16),
@@ -135,13 +162,38 @@ class DashboardScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             _Section(
+              title: 'Featured Menu',
+              child: SizedBox(
+                height: 260,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _catalogItems.length,
+                  separatorBuilder: (context, index) => const SizedBox(
+                    width: 12,
+                  ),
+                  itemBuilder: (context, index) {
+                    return CatalogItemCard(item: _catalogItems[index]);
+                  },
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            _Section(
               title: 'Restaurant Seeds',
               child: Column(
                 children: _restaurants
                     .map(
                       (restaurant) => ListTile(
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.storefront_outlined),
+                        leading: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            _restaurantAsset(restaurant.name),
+                            width: 54,
+                            height: 54,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
                         title: Text(restaurant.name),
                         subtitle: Text(restaurant.category),
                         trailing: Text(
@@ -206,6 +258,14 @@ class DashboardScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  String _restaurantAsset(String name) {
+    return switch (name) {
+      'Bon Bakery' => AppAssets.restaurantOne,
+      'Meal Monkey Legacy' => AppAssets.restaurantTwo,
+      _ => AppAssets.restaurantThree,
+    };
   }
 }
 
