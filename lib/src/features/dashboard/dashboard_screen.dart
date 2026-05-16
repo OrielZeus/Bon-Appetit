@@ -1,5 +1,6 @@
 import 'package:bon_appetit/src/core/assets/app_assets.dart';
-import 'package:bon_appetit/src/core/config/app_config.dart';
+import 'package:bon_appetit/src/core/localization/app_strings.dart';
+import 'package:bon_appetit/src/core/state/app_state.dart';
 import 'package:bon_appetit/src/features/catalog/models/catalog_item.dart';
 import 'package:bon_appetit/src/features/dashboard/models/feature_module.dart';
 import 'package:bon_appetit/src/features/dashboard/widgets/catalog_item_card.dart';
@@ -14,67 +15,45 @@ import 'package:bon_appetit/src/features/tracker/domain/tracker_event.dart';
 import 'package:flutter/material.dart';
 
 class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key, required this.onOpenSection});
+  const DashboardScreen({
+    super.key,
+    required this.appState,
+    required this.strings,
+    required this.onOpenSection,
+  });
 
+  final AppState appState;
+  final AppStrings strings;
   final ValueChanged<int> onOpenSection;
 
-  static const _modules = <FeatureModule>[
-    FeatureModule(
-      title: 'Restaurants',
-      description: 'Restaurant, bakery, menu, catalog, offer and rating flows.',
-      icon: Icons.restaurant_menu_outlined,
-      status: 'Migrating UI',
-    ),
-    FeatureModule(
-      title: 'Orders',
-      description: 'Cart, checkout, payment intent and local API handoff.',
-      icon: Icons.receipt_long_outlined,
-      status: 'API planned',
-    ),
-    FeatureModule(
-      title: 'Delivery tracker',
-      description: 'Order timeline, address changes and courier state.',
-      icon: Icons.delivery_dining_outlined,
-      status: 'Model ready',
-    ),
-    FeatureModule(
-      title: 'Documentation',
-      description: 'Unification notes, review checklist and release evidence.',
-      icon: Icons.article_outlined,
-      status: 'README seeded',
-    ),
-  ];
-
-  static const _catalogItems = <CatalogItem>[
-    CatalogItem(
-      name: 'Stone Oven Pizza',
-      category: 'Restaurant special',
-      price: 12.90,
-      assetPath: AppAssets.pizza,
-      badge: 'Hot',
-    ),
-    CatalogItem(
-      name: 'Beef Burger',
-      category: 'Delivery favorite',
-      price: 9.50,
-      assetPath: AppAssets.burger,
-      badge: 'Top',
-    ),
-    CatalogItem(
-      name: 'Cup Cake Box',
-      category: 'Bakery',
-      price: 7.20,
-      assetPath: AppAssets.cupcake,
-      badge: 'Sweet',
-    ),
-    CatalogItem(
-      name: 'Dessert Plate',
-      category: 'Meal Monkey import',
-      price: 6.80,
-      assetPath: AppAssets.dessertOne,
-      badge: 'Legacy',
-    ),
-  ];
+  List<FeatureModule> get _modules => [
+        FeatureModule(
+          title: strings.t('menu'),
+          description:
+              'Restaurant, bakery, menu, catalog, offer and rating flows.',
+          icon: Icons.restaurant_menu_outlined,
+          status: 'Migrating UI',
+        ),
+        FeatureModule(
+          title: strings.t('orders'),
+          description: 'Cart, checkout, payment intent and local API handoff.',
+          icon: Icons.receipt_long_outlined,
+          status: 'API planned',
+        ),
+        FeatureModule(
+          title: strings.t('track'),
+          description: 'Order timeline, address changes and courier state.',
+          icon: Icons.delivery_dining_outlined,
+          status: 'Model ready',
+        ),
+        const FeatureModule(
+          title: 'Documentation',
+          description:
+              'Unification notes, review checklist and release evidence.',
+          icon: Icons.article_outlined,
+          status: 'README seeded',
+        ),
+      ];
 
   static const _timeline = <TrackerEvent>[
     TrackerEvent(
@@ -96,126 +75,108 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppConfig.appName),
-        actions: [
-          IconButton(
-            tooltip: 'Source projects',
-            onPressed: () => _showSources(context),
-            icon: const Icon(Icons.source_outlined),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            HeroPanel(
-              onExploreMenu: () => onOpenSection(1),
-              onTrackOrder: () => onOpenSection(3),
-            ),
-            const SizedBox(height: 16),
-            const ServerStatusCard(),
-            const SizedBox(height: 16),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final columns = constraints.maxWidth >= 760 ? 4 : 2;
-                return GridView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _modules.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: columns,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    mainAxisExtent: columns == 4 ? 220 : 240,
+    final modules = _modules;
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        HeroPanel(
+          onExploreMenu: () => onOpenSection(1),
+          onTrackOrder: () => onOpenSection(3),
+        ),
+        const SizedBox(height: 16),
+        const ServerStatusCard(),
+        const SizedBox(height: 16),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 760 ? 4 : 2;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: modules.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                mainAxisExtent: columns == 4 ? 220 : 240,
+              ),
+              itemBuilder: (context, index) {
+                return ModuleCard(
+                  module: modules[index],
+                  onTap: () => onOpenSection(index == 0 ? 1 : index),
+                );
+              },
+            );
+          },
+        ),
+        const SizedBox(height: 20),
+        _Section(
+          title: strings.t('menu'),
+          child: SizedBox(
+            height: 260,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: appState.products.length,
+              separatorBuilder: (context, index) => const SizedBox(
+                width: 12,
+              ),
+              itemBuilder: (context, index) {
+                final product = appState.products[index];
+                return CatalogItemCard(
+                  item: CatalogItem(
+                    name: product.name,
+                    category: product.category,
+                    price: product.price,
+                    assetPath: product.assetPath,
+                    badge: '${product.preparationMinutes}m',
                   ),
-                  itemBuilder: (context, index) {
-                    return ModuleCard(
-                      module: _modules[index],
-                      onTap: () => onOpenSection(index == 0 ? 1 : index),
-                    );
-                  },
+                  actionLabel: strings.t('addToCart'),
+                  onAdd: () => appState.addToCart(product),
                 );
               },
             ),
-            const SizedBox(height: 20),
-            _Section(
-              title: 'Featured Menu',
-              child: SizedBox(
-                height: 260,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _catalogItems.length,
-                  separatorBuilder: (context, index) => const SizedBox(
-                    width: 12,
-                  ),
-                  itemBuilder: (context, index) {
-                    return CatalogItemCard(item: _catalogItems[index]);
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _Section(
-              title: 'Restaurant Seeds',
-              action: TextButton.icon(
-                onPressed: () => onOpenSection(1),
-                icon: const Icon(Icons.open_in_new_outlined),
-                label: const Text('Open'),
-              ),
-              child: _RestaurantPreview(
-                repository: RestaurantRepository(),
-                assetResolver: _restaurantAsset,
-              ),
-            ),
-            const SizedBox(height: 12),
-            _Section(
-              title: 'Order Seeds',
-              action: TextButton.icon(
-                onPressed: () => onOpenSection(2),
-                icon: const Icon(Icons.open_in_new_outlined),
-                label: const Text('Open'),
-              ),
-              child: _OrderPreviewList(repository: OrdersRepository()),
-            ),
-            const SizedBox(height: 12),
-            _Section(
-              title: 'Tracker Plan',
-              child: Column(
-                children: _timeline
-                    .map(
-                      (event) => CheckboxListTile(
-                        contentPadding: EdgeInsets.zero,
-                        value: event.isDone,
-                        onChanged: null,
-                        title: Text(event.title),
-                        subtitle: Text(event.detail),
-                      ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showSources(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Source projects'),
-        content: Text(AppConfig.sourceProjects.join('\n')),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Close'),
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 12),
+        _Section(
+          title: 'Restaurantes',
+          action: TextButton.icon(
+            onPressed: () => onOpenSection(1),
+            icon: const Icon(Icons.open_in_new_outlined),
+            label: Text(strings.t('menu')),
+          ),
+          child: _RestaurantPreview(
+            repository: RestaurantRepository(),
+            assetResolver: _restaurantAsset,
+          ),
+        ),
+        const SizedBox(height: 12),
+        _Section(
+          title: strings.t('orders'),
+          action: TextButton.icon(
+            onPressed: () => onOpenSection(2),
+            icon: const Icon(Icons.open_in_new_outlined),
+            label: Text(strings.t('orders')),
+          ),
+          child: _OrderPreviewList(repository: OrdersRepository()),
+        ),
+        const SizedBox(height: 12),
+        _Section(
+          title: strings.t('track'),
+          child: Column(
+            children: _timeline
+                .map(
+                  (event) => CheckboxListTile(
+                    contentPadding: EdgeInsets.zero,
+                    value: event.isDone,
+                    onChanged: null,
+                    title: Text(event.title),
+                    subtitle: Text(event.detail),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
+      ],
     );
   }
 

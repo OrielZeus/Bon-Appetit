@@ -71,3 +71,25 @@ dashboard as too static.
 
 - Mobile hero overflow on `sdk gphone64 x86 64`.
 - Static dashboard preview sections now refresh from `baker-server`.
+
+## 2026-05-16 - Web, Roles, Localization, and Operations
+
+Expanded the app after browser testing exposed a platform error and missing
+business operations.
+
+### Added
+
+- Browser-safe HTTP client using `package:http`.
+- Spanish default language with ES/EN/FR selector.
+- Demo users: customer, staff, and admin, all using `password123`.
+- Role-aware shell with responsive mobile bottom navigation and desktop/web rail.
+- Cart actions, local order scheduling, order updates, notifications, and admin
+  settings for users, groups, branches, prices, and preparation times.
+- CORS headers in `baker-server` for Flutter Web API calls.
+
+### Fixed
+
+- Removed `dart:io` from Flutter app code so web builds no longer fail with
+  `Unsupported operation: Platform._version`.
+- Default API host now uses `localhost:8080` on web and `10.0.2.2:8080` on
+  Android emulator.

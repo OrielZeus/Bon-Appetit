@@ -2,9 +2,16 @@ import 'package:bon_appetit/src/features/catalog/models/catalog_item.dart';
 import 'package:flutter/material.dart';
 
 class CatalogItemCard extends StatelessWidget {
-  const CatalogItemCard({super.key, required this.item});
+  const CatalogItemCard({
+    super.key,
+    required this.item,
+    this.actionLabel,
+    this.onAdd,
+  });
 
   final CatalogItem item;
+  final String? actionLabel;
+  final VoidCallback? onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -68,12 +75,25 @@ class CatalogItemCard extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 8),
-                  Text(
-                    '\$${item.price.toStringAsFixed(2)}',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: colors.primary,
-                          fontWeight: FontWeight.w700,
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          '\$${item.price.toStringAsFixed(2)}',
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: colors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                         ),
+                      ),
+                      if (onAdd != null)
+                        IconButton.filledTonal(
+                          tooltip: actionLabel,
+                          onPressed: onAdd,
+                          icon: const Icon(Icons.add_shopping_cart_outlined),
+                        ),
+                    ],
                   ),
                 ],
               ),

@@ -86,6 +86,18 @@ For a physical phone on the same network, replace the host with the PC LAN IP:
 flutter run --dart-define=API_BASE_URL=http://192.168.x.x:8080
 ```
 
+For web, the app defaults to `http://localhost:8080`:
+
+```powershell
+flutter run -d chrome
+```
+
+If a release web build hits Flutter icon tree-shaker issues on Windows, use:
+
+```powershell
+flutter build web --no-tree-shake-icons
+```
+
 ## Local Docker Run
 
 The Docker stack is isolated from other projects and uses explicit names:
@@ -156,6 +168,8 @@ integrity, non-breaking legacy improvements, and closure-ready ticket evidence.
 - Visual dashboard expanded with real legacy product and restaurant imagery.
 - Demo login, bottom navigation, live restaurant/order API reads, and tracker
   views added.
+- Responsive web support with browser-safe API client and CORS-enabled Baker
+  server.
 - Local Docker compose seeded.
 - Dart API server scaffolded.
 - README and migration log seeded.

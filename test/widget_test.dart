@@ -1,4 +1,5 @@
 import 'package:bon_appetit/src/app.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -6,13 +7,15 @@ void main() {
     await tester.pumpWidget(const BonAppetitApp());
 
     expect(find.text('Bon Appetit'), findsWidgets);
-    expect(find.text('Sign in'), findsOneWidget);
+    expect(find.text('Iniciar sesión'), findsOneWidget);
 
-    await tester.tap(find.text('Enter workspace'));
+    await tester.drag(find.byType(ListView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.login_outlined));
     await tester.pumpAndSettle();
 
-    expect(find.text('Explore menu'), findsOneWidget);
-    expect(find.text('Track order'), findsOneWidget);
-    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Menú'), findsWidgets);
+    expect(find.text('Ruta'), findsWidgets);
+    expect(find.text('Inicio'), findsOneWidget);
   });
 }

@@ -15,6 +15,7 @@ void main() async {
 
   final handler = const Pipeline()
       .addMiddleware(logRequests())
+      .addMiddleware(_corsHeaders())
       .addMiddleware(_jsonHeaders())
       .addHandler(router.call);
 
@@ -80,6 +81,25 @@ Middleware _jsonHeaders() {
           HttpHeaders.contentTypeHeader: ContentType.json.mimeType,
         },
       );
+    };
+  };
+}
+
+Middleware _corsHeaders() {
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Origin, Content-Type, Authorization',
+  };
+
+  return (innerHandler) {
+    return (request) async {
+      if (request.method == 'OPTIONS') {
+        return Response.ok('', headers: headers);
+      }
+
+      final response = await innerHandler(request);
+      return response.change(headers: {...response.headers, ...headers});
     };
   };
 }

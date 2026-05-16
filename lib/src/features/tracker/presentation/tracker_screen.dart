@@ -1,8 +1,11 @@
 import 'package:bon_appetit/src/core/assets/app_assets.dart';
+import 'package:bon_appetit/src/core/localization/app_strings.dart';
 import 'package:flutter/material.dart';
 
 class TrackerScreen extends StatelessWidget {
-  const TrackerScreen({super.key});
+  const TrackerScreen({super.key, required this.strings});
+
+  final AppStrings strings;
 
   static const _steps = [
     ('Order received', 'Baker API accepted the order draft.', true),
@@ -16,7 +19,7 @@ class TrackerScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        Text('Delivery Tracker',
+        Text(strings.t('track'),
             style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: 12),
         Card(

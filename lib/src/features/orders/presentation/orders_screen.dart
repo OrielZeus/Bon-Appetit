@@ -1,9 +1,18 @@
+import 'package:bon_appetit/src/core/localization/app_strings.dart';
+import 'package:bon_appetit/src/core/state/app_state.dart';
 import 'package:bon_appetit/src/features/orders/data/orders_repository.dart';
 import 'package:bon_appetit/src/features/orders/domain/order_preview.dart';
 import 'package:flutter/material.dart';
 
 class OrdersScreen extends StatefulWidget {
-  const OrdersScreen({super.key});
+  const OrdersScreen({
+    super.key,
+    required this.appState,
+    required this.strings,
+  });
+
+  final AppState appState;
+  final AppStrings strings;
 
   @override
   State<OrdersScreen> createState() => _OrdersScreenState();
@@ -21,6 +30,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final canEdit = widget.appState.selectedUser.role != UserRole.customer;
+
     return RefreshIndicator(
       onRefresh: () async {
         setState(() {
@@ -31,10 +42,30 @@ class _OrdersScreenState extends State<OrdersScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Orders', style: Theme.of(context).textTheme.headlineSmall),
+          Text(widget.strings.t('orders'),
+              style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
-          const Text('Draft and queued orders from the local Baker API.'),
+          const Text('Pedidos locales y simulados desde Baker API.'),
           const SizedBox(height: 16),
+          if (widget.appState.localOrders.isNotEmpty) ...[
+            Text('Pedidos creados',
+                style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 8),
+            ...widget.appState.localOrders.map(
+              (order) => _LocalOrderCard(
+                order: order,
+                canEdit: canEdit,
+                onUpdate: (status, payment) => widget.appState.updateOrder(
+                  order,
+                  status: status,
+                  paymentStatus: payment,
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+          Text('Baker API', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: 8),
           FutureBuilder<List<OrderPreview>>(
             future: _futureOrders,
             builder: (context, snapshot) {
@@ -53,7 +84,7 @@ class _OrdersScreenState extends State<OrdersScreen> {
               final orders = snapshot.data ?? const <OrderPreview>[];
               return Column(
                 children:
-                    orders.map((order) => _OrderCard(order: order)).toList(),
+                    orders.map((order) => _ApiOrderCard(order: order)).toList(),
               );
             },
           ),
@@ -63,15 +94,19 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 }
 
-class _OrderCard extends StatelessWidget {
-  const _OrderCard({required this.order});
+class _LocalOrderCard extends StatelessWidget {
+  const _LocalOrderCard({
+    required this.order,
+    required this.canEdit,
+    required this.onUpdate,
+  });
 
-  final OrderPreview order;
+  final LocalOrder order;
+  final bool canEdit;
+  final void Function(String status, String payment) onUpdate;
 
   @override
   Widget build(BuildContext context) {
-    final colors = Theme.of(context).colorScheme;
-
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: Padding(
@@ -81,41 +116,57 @@ class _OrderCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.receipt_long_outlined, color: colors.primary),
-                const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    order.code,
-                    style: Theme.of(context).textTheme.titleLarge,
-                  ),
+                  child: Text(order.code,
+                      style: Theme.of(context).textTheme.titleLarge),
                 ),
                 Chip(label: Text(order.status)),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(order.customer),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Text(
-                  '\$${order.total.toStringAsFixed(2)}',
-                  style: Theme.of(context).textTheme.titleMedium,
-                ),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text('${order.code} marked for review')),
-                    );
-                  },
-                  icon: const Icon(Icons.check_circle_outline),
-                  label: const Text('Review'),
-                ),
-              ],
-            ),
+            Text('${order.customer} | ${order.paymentStatus}'),
+            Text('Agenda: ${order.scheduledAt}'),
+            Text('\$${order.total.toStringAsFixed(2)}'),
+            if (canEdit) ...[
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  FilledButton.tonal(
+                    onPressed: () => onUpdate('Preparing', order.paymentStatus),
+                    child: const Text('Preparar'),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: () => onUpdate(order.status, 'Paid'),
+                    child: const Text('Pago OK'),
+                  ),
+                  FilledButton.tonal(
+                    onPressed: () => onUpdate('Delivered', 'Paid'),
+                    child: const Text('Entregar'),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ApiOrderCard extends StatelessWidget {
+  const _ApiOrderCard({required this.order});
+
+  final OrderPreview order;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ListTile(
+        leading: const Icon(Icons.receipt_long_outlined),
+        title: Text(order.code),
+        subtitle: Text('${order.customer} | ${order.status}'),
+        trailing: Text('\$${order.total.toStringAsFixed(2)}'),
       ),
     );
   }

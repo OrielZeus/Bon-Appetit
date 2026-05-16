@@ -1,4 +1,6 @@
 import 'package:bon_appetit/src/core/assets/app_assets.dart';
+import 'package:bon_appetit/src/core/localization/app_strings.dart';
+import 'package:bon_appetit/src/core/state/app_state.dart';
 import 'package:bon_appetit/src/features/catalog/models/catalog_item.dart';
 import 'package:bon_appetit/src/features/dashboard/widgets/catalog_item_card.dart';
 import 'package:bon_appetit/src/features/restaurants/data/restaurant_repository.dart';
@@ -6,7 +8,14 @@ import 'package:bon_appetit/src/features/restaurants/domain/restaurant.dart';
 import 'package:flutter/material.dart';
 
 class RestaurantsScreen extends StatefulWidget {
-  const RestaurantsScreen({super.key});
+  const RestaurantsScreen({
+    super.key,
+    required this.appState,
+    required this.strings,
+  });
+
+  final AppState appState;
+  final AppStrings strings;
 
   @override
   State<RestaurantsScreen> createState() => _RestaurantsScreenState();
@@ -14,38 +23,6 @@ class RestaurantsScreen extends StatefulWidget {
 
 class _RestaurantsScreenState extends State<RestaurantsScreen> {
   final _repository = RestaurantRepository();
-
-  static const _menu = <CatalogItem>[
-    CatalogItem(
-      name: 'Stone Oven Pizza',
-      category: 'Restaurant special',
-      price: 12.90,
-      assetPath: AppAssets.pizza,
-      badge: 'Hot',
-    ),
-    CatalogItem(
-      name: 'Beef Burger',
-      category: 'Delivery favorite',
-      price: 9.50,
-      assetPath: AppAssets.burger,
-      badge: 'Top',
-    ),
-    CatalogItem(
-      name: 'Cup Cake Box',
-      category: 'Bakery',
-      price: 7.20,
-      assetPath: AppAssets.cupcake,
-      badge: 'Sweet',
-    ),
-    CatalogItem(
-      name: 'Dessert Plate',
-      category: 'Legacy dessert',
-      price: 6.80,
-      assetPath: AppAssets.dessertTwo,
-      badge: 'Meal',
-    ),
-  ];
-
   late Future<List<Restaurant>> _futureRestaurants;
 
   @override
@@ -56,6 +33,8 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isWide = MediaQuery.sizeOf(context).width >= 820;
+
     return RefreshIndicator(
       onRefresh: () async {
         setState(() {
@@ -66,11 +45,10 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          Text('Restaurants & Bakery',
+          Text(widget.strings.t('menu'),
               style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 8),
-          const Text(
-              'Live restaurant data from the Baker API plus migrated menu examples.'),
+          const Text('Restaurantes en vivo y menú configurable.'),
           const SizedBox(height: 16),
           FutureBuilder<List<Restaurant>>(
             future: _futureRestaurants,
@@ -88,26 +66,47 @@ class _RestaurantsScreenState extends State<RestaurantsScreen> {
               }
 
               final restaurants = snapshot.data ?? const <Restaurant>[];
-              return Column(
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
                 children: restaurants
                     .map(
-                        (restaurant) => _RestaurantCard(restaurant: restaurant))
+                      (restaurant) => SizedBox(
+                        width: isWide ? 360 : double.infinity,
+                        child: _RestaurantCard(restaurant: restaurant),
+                      ),
+                    )
                     .toList(),
               );
             },
           ),
           const SizedBox(height: 18),
-          Text('Menu examples', style: Theme.of(context).textTheme.titleLarge),
+          Text('Productos', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 12),
-          SizedBox(
-            height: 260,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _menu.length,
-              separatorBuilder: (context, index) => const SizedBox(width: 12),
-              itemBuilder: (context, index) =>
-                  CatalogItemCard(item: _menu[index]),
-            ),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: widget.appState.products.map((product) {
+              return SizedBox(
+                height: 270,
+                child: CatalogItemCard(
+                  item: CatalogItem(
+                    name: product.name,
+                    category: product.category,
+                    price: product.price,
+                    assetPath: product.assetPath,
+                    badge: '${product.preparationMinutes}m',
+                  ),
+                  actionLabel: widget.strings.t('addToCart'),
+                  onAdd: () {
+                    widget.appState.addToCart(product);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('${product.name} agregado')),
+                    );
+                  },
+                ),
+              );
+            }).toList(),
           ),
         ],
       ),
@@ -124,7 +123,6 @@ class _RestaurantCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       clipBehavior: Clip.antiAlias,
-      margin: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -139,29 +137,14 @@ class _RestaurantCard extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(14),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        restaurant.name,
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                      Text(restaurant.category),
-                    ],
-                  ),
-                ),
-                FilledButton.tonalIcon(
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${restaurant.name} selected')),
-                    );
-                  },
-                  icon: const Icon(Icons.add_shopping_cart_outlined),
-                  label: const Text('Order'),
-                ),
+                Text(restaurant.name,
+                    style: Theme.of(context).textTheme.titleLarge),
+                Text(restaurant.category),
+                const SizedBox(height: 8),
+                Text('${restaurant.rating} | ${restaurant.deliveryMinutes}m'),
               ],
             ),
           ),

@@ -1,25 +1,25 @@
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:bon_appetit/src/core/config/app_config.dart';
+import 'package:http/http.dart' as http;
 
 class ApiClient {
-  ApiClient({HttpClient? httpClient})
-      : _httpClient = httpClient ?? HttpClient();
+  ApiClient({http.Client? httpClient})
+      : _httpClient = httpClient ?? http.Client();
 
-  final HttpClient _httpClient;
+  final http.Client _httpClient;
 
   Future<Map<String, dynamic>> getJson(String path) async {
     final uri = Uri.parse('${AppConfig.apiBaseUrl}$path');
-    final request = await _httpClient.getUrl(uri).timeout(AppConfig.apiTimeout);
-    final response = await request.close().timeout(AppConfig.apiTimeout);
-    final body = await response.transform(utf8.decoder).join();
+    final response = await _httpClient.get(uri).timeout(AppConfig.apiTimeout);
 
     if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw ApiException('GET $path failed with ${response.statusCode}: $body');
+      throw ApiException(
+        'GET $path failed with ${response.statusCode}: ${response.body}',
+      );
     }
 
-    final decoded = jsonDecode(body);
+    final decoded = jsonDecode(response.body);
     if (decoded is Map<String, dynamic>) {
       return decoded;
     }
