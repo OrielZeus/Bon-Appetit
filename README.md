@@ -120,8 +120,9 @@ curl http://localhost:8080/restaurants
 curl http://localhost:8080/orders
 ```
 
-The database is exposed on host port `54329` to avoid colliding with other local
-Postgres instances.
+The database is intentionally not exposed to the host. `baker-server` reaches it
+inside the Docker network through `baker-postgres:5432`. This avoids noisy
+host-side probes hitting PostgreSQL with non-Postgres traffic.
 
 ## Configuration Rules
 

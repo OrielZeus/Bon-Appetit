@@ -21,8 +21,8 @@ services:
       POSTGRES_DB: bon_appetit
       POSTGRES_USER: bon_appetit
       POSTGRES_PASSWORD: bon_appetit
-    ports:
-      - "54329:5432"
+    expose:
+      - "5432"
     volumes:
       - baker_postgres_data:/var/lib/postgresql/data
       - ./server/db/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro

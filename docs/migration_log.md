@@ -93,3 +93,20 @@ business operations.
   `Unsupported operation: Platform._version`.
 - Default API host now uses `localhost:8080` on web and `10.0.2.2:8080` on
   Android emulator.
+
+## 2026-05-16 - Docker Postgres Noise Cleanup
+
+Reviewed `baker-postgres` logs after repeated `invalid length of startup packet`
+messages appeared in Docker Desktop.
+
+### Finding
+
+Postgres was healthy and initialized correctly. The repeated log entries were
+caused by non-Postgres traffic reaching the host-exposed database port.
+
+### Change
+
+- Removed the host port mapping for Postgres.
+- Kept Postgres reachable to `baker-server` inside Docker via
+  `baker-postgres:5432`.
+- Kept only the API exposed to the host through `localhost:8080`.
